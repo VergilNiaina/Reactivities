@@ -2,12 +2,13 @@ import { Button, Item, Label, Segment } from "semantic-ui-react"
 import { SyntheticEvent, useState } from "react";
 import { useStore } from "../../../app/stores/store";
 import { observer } from "mobx-react-lite";
+import { Link } from "react-router-dom";
 
 
 export default observer(function ActivityList() {
 
   const {activityStore} = useStore();
-  const {selectActivity, deleteActivity, activitiesByDate, loading} = activityStore
+  const {deleteActivity, activitiesByDate, loading} = activityStore
 
   const [target, setTarget] = useState('');
   // to hanlde delete from specific button
@@ -32,7 +33,7 @@ export default observer(function ActivityList() {
                             <div>{activity.city}, {activity.venue}</div>
                         </Item.Description>
                         <Item.Extra>
-                            <Button floated="right" content="View" color="blue" onClick={()=>selectActivity(activity.id)}/>
+                            <Button as={Link} to={`/activities/${activity.id}`} floated="right" content="View" color="blue"/>
                             {/* we will not only if we are submiting but also the name of the button*/}
                             <Button 
                                 name={activity.id}

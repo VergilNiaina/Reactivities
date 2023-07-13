@@ -10,7 +10,7 @@ export default class ActivityStore{
      selectedActivity : Activity | undefined = undefined;
      editMode  = false;
      loading = false;
-     loadingInitial = true ;
+     loadingInitial = false ;
 
 
      constructor(){
@@ -24,49 +24,50 @@ export default class ActivityStore{
      // })
      }
 
-     //computed
+     // computed
      get activitiesByDate(){
           return Array.from(this.activityRegistry.values()).sort((a,b) => 
                     Date.parse(a.dateTime) - Date.parse(b.dateTime))
      }
-
+     // Action 
      loadActivities = async () =>{
-     try {
-          const activities = await agent.Activities.list();
-          // this part is needed to runInAction an action await/async OR create an another action
-          activities.forEach(activity => {
-               activity.dateTime= activity.dateTime.split('T')[0];
-               //this.activities.push(activity);
-               this.activityRegistry.set(activity.id,activity);
-          });
-          this.setLoadingInitial(false);
-     } catch (error) {
-          console.log(error)  
-          this.setLoadingInitial(false);
-     }
+          if(!this.loadingInitial) this.setLoadingInitial(true)
+          try {
+               const activities = await agent.Activities.list();
+               // this part is needed to runInAction an action await/async OR create an another action
+               activities.forEach(activity => {
+                    this.setActivity(activity);
+               });
+               this.setLoadingInitial(false);
+          } catch (error) {
+               console.log(error)  
+               this.setLoadingInitial(false);
+          }
      }
 
      setLoadingInitial = (state : boolean) =>{
           this.loadingInitial = state;
      } 
 
-     selectActivity = ( id : string) =>{
-          //this.selectedActivity = this.activities.find( activity => activity.id===id)
-          this.selectedActivity = this.activityRegistry.get(id);
-     }
+     // we don't need those if using router
 
-     cancelSelectedActivity = () => {
-          this.selectedActivity = undefined;
-     }
+     // selectActivity = ( id : string) =>{
+     //      //this.selectedActivity = this.activities.find( activity => activity.id===id)
+     //      this.selectedActivity = this.activityRegistry.get(id);
+     // }
 
-     openForm = (id?: string) =>{
-          id? this.selectActivity(id) : this.cancelSelectedActivity();
-          this.editMode = true ;
-     }
-
-     closeForm = () =>{
-          this.editMode = false ;
-     }
+     // cancelSelectedActivity = () => {
+     //      this.selectedActivity = undefined;
+     // }
+     //
+     // openForm = (id?: string) =>{
+     //      id? this.selectActivity(id) : this.cancelSelectedActivity();
+     //      this.editMode = true ;
+     // }
+     //
+     // closeForm = () =>{
+     //      this.editMode = false ;
+     // }
 
      createActivity = async (activity : Activity) =>{
           this.loading= true;
@@ -115,7 +116,6 @@ export default class ActivityStore{
                runInAction(()=>{
                     //this.activities=[...this.activities.filter(a => a.id !== id)];
                     this.activityRegistry.delete(id);
-                    if(this.selectedActivity?.id === id) this.cancelSelectedActivity();
                     this.loading = false ;
                })
           } catch (error) {
@@ -124,5 +124,38 @@ export default class ActivityStore{
                     this.loading = false ;
                })
           }
+     }
+
+     // after introducing router
+     loadActivity = async (id : string) => {
+          let activity = this.getActivity(id);
+          if(activity){
+               this.selectedActivity = activity;
+               return activity;
+          }
+          else {
+               this.setLoadingInitial(true) ;
+               try {
+                    activity = await agent.Activities.details(id);
+                    this.setActivity(activity);
+                    runInAction(()=>{
+                         this.selectedActivity = activity;
+                    })
+                    this.setLoadingInitial(false) ;
+                    return activity;
+               } catch (error) {
+                    console.log(error) ;
+                    this.setLoadingInitial(false) ;
+               }
+          }
+     }
+
+     private getActivity = (id : string) => {
+          return this.activityRegistry.get(id);
+     }
+
+     private setActivity = (activity : Activity) =>{
+          activity.dateTime= activity.dateTime.split('T')[0];
+          this.activityRegistry.set(activity.id,activity);
      }
 }

@@ -1,10 +1,10 @@
-import React from 'react';
 import ReactDOM from 'react-dom/client';
 import 'semantic-ui-css/semantic.min.css';
 import './app/layout/style.css';
-import App from './app/layout/App';
 import reportWebVitals from './reportWebVitals';
 import { StoreContext, store } from './app/stores/store';
+import { RouterProvider } from 'react-router-dom';
+import { router } from './app/router/Routes';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -12,7 +12,8 @@ const root = ReactDOM.createRoot(
 root.render(
   // Provide our Store Context to the app
   <StoreContext.Provider value={store}>
-      <App />
+    {/* Provide our routes to the app and removing </App>*/}
+      <RouterProvider router={router}/>
   </StoreContext.Provider>
 );
 
