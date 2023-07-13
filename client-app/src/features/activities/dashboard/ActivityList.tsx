@@ -1,14 +1,13 @@
 import { Button, Item, Label, Segment } from "semantic-ui-react"
-import { Activity } from "../../../app/models/activity"
 import { SyntheticEvent, useState } from "react";
+import { useStore } from "../../../app/stores/store";
+import { observer } from "mobx-react-lite";
 
-interface Props{
-    activities: Activity[];
-    selectActivity : (id:string) => void;
-    deleteActivity: (id :  string )=> void;
-    submitingForm:boolean;
-}
-export default function ActivityList({activities, selectActivity, deleteActivity, submitingForm}:Props) {
+
+export default observer(function ActivityList() {
+
+  const {activityStore} = useStore();
+  const {selectActivity, deleteActivity, activitiesByDate, loading} = activityStore
 
   const [target, setTarget] = useState('');
   // to hanlde delete from specific button
@@ -17,10 +16,13 @@ export default function ActivityList({activities, selectActivity, deleteActivity
     setTarget(e.currentTarget.name);
     deleteActivity(id);
   }
+
+  
+  
   return (
     <Segment>
         <Item.Group divided>
-            {activities.map(activity =>(
+            {activitiesByDate.map(activity =>(
                 <Item key={activity.id}>
                     <Item.Content>
                         <Item.Header as='a'>{activity.title}</Item.Header>
@@ -34,7 +36,7 @@ export default function ActivityList({activities, selectActivity, deleteActivity
                             {/* we will not only if we are submiting but also the name of the button*/}
                             <Button 
                                 name={activity.id}
-                                loading={submitingForm && target === activity.id} 
+                                loading={loading && target === activity.id} 
                                 onClick={(e)=>handleActivityDelete(e,activity.id)}
                                 floated="right" 
                                 content="Delete" 
@@ -48,4 +50,4 @@ export default function ActivityList({activities, selectActivity, deleteActivity
         </Item.Group>
     </Segment>
   )
-}
+})
