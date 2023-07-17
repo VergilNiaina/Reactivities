@@ -1,3 +1,4 @@
+using Application.Core;
 using Domain;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -8,9 +9,9 @@ namespace Application.Activities
 {
     public class List
     {
-        public class Query : IRequest<List<Activity>> {}
+        public class Query : IRequest<Result<List<Activity>>> {}
 
-        public class Handler : IRequestHandler<Query, List<Activity>>
+        public class Handler : IRequestHandler<Query, Result<List<Activity>>>
         {
             private readonly DataContext _dataContext;
             private readonly ILogger<List> _logger;
@@ -20,7 +21,7 @@ namespace Application.Activities
                 _dataContext = dataContext;
                 _logger = logger;
             }
-            public async Task<List<Activity>> Handle(Query request, CancellationToken cancellationToken)
+            public async Task<Result<List<Activity>>> Handle(Query request, CancellationToken cancellationToken)
             {
                 // the cancellationToken here is just to demonstrate how we can cancel task
                 // try
@@ -36,7 +37,7 @@ namespace Application.Activities
                 // {
                 //     _logger.LogError("Task cancelled!");                    
                 // }
-                return await _dataContext.Activities.ToListAsync();
+                return Result<List<Activity>>.Success(await _dataContext.Activities.ToListAsync());
             }
         }
     }
