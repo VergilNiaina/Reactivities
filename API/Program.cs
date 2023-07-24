@@ -1,5 +1,9 @@
 using API.Extensions;
 using API.Middleware;
+using Domain;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Persistence;
 
@@ -9,10 +13,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(opt => {
+    // Every single controller endpoints will require authentication
+    var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+    opt.Filters.Add(new AuthorizeFilter(policy));
+});
 
 builder.Services.AddApplicationServices(builder.Configuration);
 
+builder.Services.AddIdentityServices(builder.Configuration);
 #endregion
 
 var app = builder.Build();
@@ -26,13 +35,15 @@ app.UseMiddleware<ExceptionMiddleware>();
 if (app.Environment.IsDevelopment())
 {
     // previously in .net 5 but now it is used even we don't specify it
-    //app.UseDeveloperExceptionPage();
+    // app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
 app.UseCors("CorsPolicy");
-
+// To check if it is a valide user
+app.UseAuthentication();
+// Then if valide user then authorize to do something
 app.UseAuthorization();
 
 //register the end points in the controllers
@@ -47,9 +58,10 @@ var services = scope.ServiceProvider;
 try
 {
     var context = services.GetRequiredService<DataContext>();
+    var userManager = services.GetRequiredService<UserManager<AppUser>>();
     // attempt to create the table
     context.Database.Migrate();
-    await Seed.SeedData(context);
+    await Seed.SeedData(context,userManager);
 }
 catch (Exception ex)
 {
