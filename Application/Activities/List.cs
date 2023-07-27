@@ -1,4 +1,6 @@
 using Application.Core;
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Domain;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -9,19 +11,21 @@ namespace Application.Activities
 {
     public class List
     {
-        public class Query : IRequest<Result<List<Activity>>> {}
+        public class Query : IRequest<Result<List<ActivityDto>>> {}
 
-        public class Handler : IRequestHandler<Query, Result<List<Activity>>>
+        public class Handler : IRequestHandler<Query, Result<List<ActivityDto>>>
         {
             private readonly DataContext _dataContext;
             private readonly ILogger<List> _logger;
+            private readonly IMapper _mapper;
 
-            public Handler(DataContext dataContext, ILogger<List> logger)
+            public Handler(DataContext dataContext, ILogger<List> logger, IMapper mapper)
             {
+                _mapper = mapper;
                 _dataContext = dataContext;
                 _logger = logger;
             }
-            public async Task<Result<List<Activity>>> Handle(Query request, CancellationToken cancellationToken)
+            public async Task<Result<List<ActivityDto>>> Handle(Query request, CancellationToken cancellationToken)
             {
                 // the cancellationToken here is just to demonstrate how we can cancel task
                 // try
@@ -37,7 +41,22 @@ namespace Application.Activities
                 // {
                 //     _logger.LogError("Task cancelled!");                    
                 // }
-                return Result<List<Activity>>.Success(await _dataContext.Activities.ToListAsync());
+
+                // RELATED Entities
+                // <> Agearly : probably there will be some addtionnal props you dont need 
+                // var activities= await _dataContext.Activities
+                //                                 .Include(a => a.Attendees)
+                //                                     .ThenInclude(aa => aa.AppUser)
+                //                                         .ToListAsync(cancellationToken);
+                // var acititiesToReturn = _mapper.Map<List<ActivityDto>>(activities);
+                
+                // <> Projection : better query
+                var activities = await _dataContext.Activities
+                                            .ProjectTo<ActivityDto>(_mapper.ConfigurationProvider)
+                                                .ToListAsync(cancellationToken);
+
+
+                return Result<List<ActivityDto>>.Success(activities);
             }
         }
     }

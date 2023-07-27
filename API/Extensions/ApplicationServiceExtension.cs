@@ -1,7 +1,9 @@
 using Application.Activities;
 using Application.Core;
+using Application.Interfaces;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Infrastructure.Security;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Persistence;
@@ -37,6 +39,10 @@ namespace API.Extensions
             // Add Fluent Validation 
             services.AddFluentValidationAutoValidation();
             services.AddValidatorsFromAssemblyContaining<ActivityValidator>();
+
+            // In Order to access HttpContext in project apart from the API project Context
+            services.AddHttpContextAccessor();
+            services.AddScoped<IUserAccessor, UserAccessor>();
 
             return services;                                             
         }
