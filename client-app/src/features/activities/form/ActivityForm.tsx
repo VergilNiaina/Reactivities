@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useStore } from "../../../app/stores/store";
 import { observer } from "mobx-react-lite";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Activity } from "../../../app/models/activity";
+import { Activity, ActivityFormValues } from "../../../app/models/activity";
 import LoadingComponent from "../../../app/layout/LoadingComponent";
 import {v4 as uuid} from "uuid";
 
@@ -21,22 +21,14 @@ export default observer(function ActivityForm() {
   const {createActivity, updateActivity, 
     loading, loadActivity, loadingInitial} = activityStore;
 
-  const [activity, setActivity] = useState<Activity>({
-    id:'',
-    title:'',
-    category:'',
-    dateTime:null,
-    city:'',
-    description:'',
-    venue:''
-  });
+  const [activity, setActivity] = useState<ActivityFormValues>(new ActivityFormValues());
   // get id param in the url
   const {id}= useParams();
   // to be able to navigate
   const navigate = useNavigate()
   // do something when this components loads
   useEffect(()=>{
-      if(id) loadActivity(id).then(activity => setActivity(activity!))
+      if(id) loadActivity(id).then(activity => setActivity(new ActivityFormValues(activity)))
   },[id, loadActivity]);
   
 
@@ -49,10 +41,12 @@ export default observer(function ActivityForm() {
     city : Yup.string().required(),
   })
 
-  function handleFormSubmit(activity: Activity){
+  function handleFormSubmit(activity: ActivityFormValues){
     if(!activity.id){
-      activity.id= uuid();
-      createActivity(activity).then(() => navigate(`/activities/${activity.id}`));
+      let newActivity={
+        ...activity,id:uuid()
+      }
+     createActivity(newActivity).then(() => navigate(`/activities/${newActivity.id}`));
     } else{
       updateActivity(activity).then(() => navigate(`/activities/${activity.id}`));
     }
@@ -94,7 +88,7 @@ export default observer(function ActivityForm() {
                       <MyTextInput placeholder='Venue'  name='venue'/>
                       <Button
                             disabled={isSubmitting || !isValid || !dirty }  
-                            loading={loading} 
+                            loading={isSubmitting} 
                             floated="right" 
                             positive type="submit" 
                             content='Submit'/>

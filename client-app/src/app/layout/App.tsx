@@ -16,7 +16,6 @@ import ModalContainer from '../common/modals/ModalContainer';
       
       if(commonStore.token){
           userStore.getUser().finally(()=> commonStore.setAppLoaded())
-          console.log("user", userStore.user);
       }
       else{
         commonStore.setAppLoaded()
