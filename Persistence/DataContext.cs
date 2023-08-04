@@ -12,6 +12,7 @@ namespace Persistence
 
         public DbSet<Activity> Activities { get; set; }
         public DbSet<ActivityAttendee> ActivityAttendees { get; set; }
+        public DbSet<Photo> Photos {get;set;}
 
         // overide the OnModelCreating Method from IdentityDbContext
         protected override void OnModelCreating(ModelBuilder builder)
